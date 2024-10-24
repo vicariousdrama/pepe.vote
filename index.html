@@ -125,7 +125,7 @@
     const kindMetadata = 0;
     const kindOption = 3939; // PEPE Reversi
     const kindVote = 1212; // Homestar https://www.youtube.com/watch?v=dExUFSLCBYk
-    const tagFilter = "pepe";
+    const tagFilter = "pepevote";
     const namespace = "vote.pepe";
     const namespaceOption = "voteoption";
     const altVote = "A vote for pepe is a vote for humanity and human kind. Vote today and vote often at https://pepe.vote";
@@ -253,7 +253,7 @@
                                 if (te.length < 2) continue;
                                 if (te[0] == 'L' && te[1] == namespace) hasNamespace = true;
                                 if (te[0] == 'l' && te[1] == namespaceOption) hasLabel = true;
-                                if (te[0] == 'h' && te[1] == tagFilter) hasHashtag = true;
+                                if (te[0] == 't' && te[1] == tagFilter) hasHashtag = true;
                             }
                             if (hasNamespace && hasLabel && hasHashtag) {
                                 options.append(voteoption);
