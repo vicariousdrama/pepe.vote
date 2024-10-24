@@ -1,0 +1,5 @@
+{
+    "nsec": "nsec value to use for signing nostr events",
+    "imagesource": "/path/to/images",
+    "category": "#pepe"
+}
