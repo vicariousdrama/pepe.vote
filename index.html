@@ -80,6 +80,7 @@
       background-color: #45a049;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/nostr-zap@1.1.0"></script>
 </head>
 <body>
   <header>
@@ -105,7 +106,7 @@
 
     <div class="leaderboard-section" style="display:none;">
         <h2>Leaderboard Results!</h2>
-        ...
+        <div id="leaderboard-results"></div>
     </div>
 
     <div class="leaderboard">
@@ -135,7 +136,17 @@
     let availableOptions = [];  // will contain all possible events (with r tag for image url) that can be voted on
     let option1id = '';
     let option2id = '';
+    let brokenImageUrl = 'broken';
 
+    function getImageFromEventByID(id) {
+        for (let o of availableOptions) {
+            if (o.id == id) {
+                return getImageFromEvent(o);
+            }
+        }
+        if (window.DEBUG) console.log(`Event with id ${id} not present in available options. Unable to get image url`);
+        return brokenImageUrl;
+    }
     function getImageFromEvent(o) {
         for (let t of o.tags) {
             if (t.length < 2) continue;
@@ -148,7 +159,6 @@
         let o2 = document.getElementById('voteoption2-btn');
         if (!availableOptions || availableOptions.length == 0) {
             // force the images to busted
-            let brokenImageUrl = 'broken';
             o1.src = brokenImageUrl;
             o1.style.cursor = 'not-allowed';
             o2.src = brokenImageUrl;
@@ -194,8 +204,21 @@
 
     document.getElementById('leaderboard-btn').addEventListener('click', async () => {
         document.querySelector('.vote-section').style.display = 'none';
-        // TODO: get responses, tally and sort, display results -- maybe move to a background
-        // process
+        let lbr = document.getElementById('leaderboard-results');
+        // Clear existing entries on leaderboard
+        while (lbr.firstChild) lbr.removeChild(lbr.lastChild);
+        // Add new ones from 
+        for (let tally of tallied) {
+            // tally.eventId, tally.votecount
+            // look up url from options
+            let imageUrl = getImageFromEventByID(tally.eventId);
+
+            // TODO: Create element for this image and vote count. Then append the child to lbr.
+
+        }
+        
+
+        // Show leaderboard
         document.querySelector('.leaderboard-results').style.display = 'block';
     });
 
@@ -262,7 +285,6 @@
                         }
                     }
                     if (message[0] === 'EOSE') {
-                        resolve(options);
                         ws.send(JSON.stringify(["CLOSE", "options"]));
                         ws.close();
                     }
@@ -275,6 +297,9 @@
                     if (window.DEBUG) console.log(`Closed connection to ${relay}`);
                 }                
             });
+            setTimeout(() => {
+                resolve(options);
+            }, 2000);
         });
     }
 
@@ -309,7 +334,6 @@
                         }
                     }
                     if (message[0] === 'EOSE') {
-                        resolve(results);
                         ws.send(JSON.stringify(["CLOSE", "results"]));
                         ws.close();
                     }
@@ -322,6 +346,9 @@
                     if (window.DEBUG) console.log(`Closed connection to ${relay}`);
                 }                
             });
+            setTimeout(() => {
+                resolve(results);
+            }, 2000);            
         });
     }
 
