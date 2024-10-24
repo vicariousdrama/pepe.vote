@@ -132,8 +132,8 @@
         const namespace = "vote.pepe";
         const namespaceOption = "voteoption";
         const altVote = "A vote for pepe is a vote for humanity and human kind. Vote today and vote often at https://pepe.vote";
-        const readRelays = ['wss://relay.primal.net'];
-        const writeRelays = ['wss://relay.primal.net'];
+        const readRelays = ['wss://relay.damus.io', 'wss://relay.primal.net'];
+        const writeRelays = ['wss://relay.damus.io', 'wss://relay.primal.net'];
         let tallied = [];           // will contain locally tallied amounts for events and images to render in leaderboard
         let availableOptions = [];  // will contain all possible events (with r tag for image url) that can be voted on
         let option1id = '';
@@ -270,6 +270,7 @@
                         let filter = { kinds: [kindOption], limit: 5000 };
                         filter['#t'] = tagFilter;
                         console.log("filter: ", filter)
+                        console.log("ws send strignified: ", JSON.stringify(["REQ", "options", filter]))
                         ws.send(JSON.stringify(["REQ", "options", filter]));
                     };
                     ws.onmessage = (event) => {
