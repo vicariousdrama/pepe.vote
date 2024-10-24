@@ -124,6 +124,7 @@
     </main>
 
     <script>
+        console.log("hello the page has just loaded")
         const kindMetadata = 0;
         const kindOption = 3939; // PEPE Reversi
         const kindVote = 1212; // Homestar https://www.youtube.com/watch?v=dExUFSLCBYk
@@ -156,9 +157,11 @@
             return '';
         }
         async function setupVoteOptions() {
+            cosole.log("setup vote options")
             let o1 = document.getElementById('voteoption1-btn');
             let o2 = document.getElementById('voteoption2-btn');
             if (!availableOptions || availableOptions.length == 0) {
+                console.log("images not loaded")
                 // force the images to busted
                 o1.src = brokenImageUrl;
                 o1.style.cursor = 'not-allowed';
@@ -184,6 +187,7 @@
 
         document.getElementById('login-btn').addEventListener('click', async () => {
             if (window.nostr) {
+                console.log("window.nostr found")
                 try {
                     const pubKey = await window.nostr.getPublicKey();
                     const profile = await fetchProfile(pubKey);
@@ -200,6 +204,7 @@
                 }
             } else {
                 alert('NIP-07 extension is required to log in and vote.');
+                console.log("window.nostr NOT found")
             }
         });
 
@@ -255,16 +260,19 @@
         // Function to fetch voting options
         async function fetchOptions() {
             return new Promise((resolve, reject) => {
+                console.log("fetching options promise....")
                 let options = [];
                 let optionids = [];
                 readRelays.forEach((relay) => {
                     const ws = new WebSocket(relay);
                     ws.onopen = () => {
+                        console.log("ws opened")
                         let filter = { kinds: [kindOption], limit: 5000 };
                         filter['#t'] = tagFilter;
                         ws.send(JSON.stringify(["REQ", "options", filter]));
                     };
                     ws.onmessage = (event) => {
+                        console.log("ws on message: ", event)
                         const message = JSON.parse(event.data);
                         if (message[0] === 'EVENT' && message.length >= 2) {
                             let voteoption = message[2];
