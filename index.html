@@ -228,7 +228,9 @@
             let availableOptions = [];
             let option1id = "";
             let option2id = "";
-            let brokenImageUrl = "broken";
+            let brokenImageUrl = "https://i.nostr.build/amWoHfhFGLzgscdr.png";
+            document.getElementById("voteoption1-btn").src = brokenImageUrl;
+            document.getElementById("voteoption2-btn").src = brokenImageUrl;
 
             function getImageFromEventByID(id) {
                 for (let o of availableOptions) {
