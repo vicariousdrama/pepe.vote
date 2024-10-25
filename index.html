@@ -18,11 +18,41 @@
                 font-family: Arial, sans-serif;
                 background-color: #1a1a1a;
                 color: #ffffff;
+                min-height: 100vh;
+            }
+
+            nav {
+                background-color: #2c2c2c;
+                padding: 1rem;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            .nav-content {
+                max-width: 1200px;
+                margin: 0 auto;
                 display: flex;
-                flex-direction: column;
+                justify-content: space-between;
                 align-items: center;
-                justify-content: center;
-                height: 100vh;
+            }
+
+            .nav-links {
+                display: flex;
+                gap: 20px;
+            }
+
+            .nav-links a {
+                color: #fff;
+                text-decoration: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                transition: background-color 0.3s;
+            }
+
+            .nav-links a:hover {
+                background-color: #3c3c3c;
             }
 
             header {
@@ -42,19 +72,43 @@
                 margin: 0;
             }
 
-            #profile-pic-container {
-                width: 50px;
-                height: 50px;
-            }
-
-            #profile-pic {
-                width: 64px;
-                height: 64px;
-                border-radius: 50%;
-            }
-
             main {
+                max-width: 1200px;
+                margin: 2rem auto;
+                padding: 0 1rem;
                 text-align: center;
+            }
+
+            .results-table {
+                width: 100%;
+                margin-top: 2rem;
+                border-collapse: collapse;
+                background-color: #2c2c2c;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 1rem;
+                text-align: left;
+                border-bottom: 1px solid #3c3c3c;
+            }
+
+            .results-table th {
+                background-color: #333;
+                font-weight: bold;
+            }
+
+            .results-table td img {
+                width: 100px;
+                height: 100px;
+                object-fit: contain;
+                border-radius: 4px;
+            }
+
+            .results-table tr:hover {
+                background-color: #363636;
             }
 
             button {
@@ -67,35 +121,34 @@
                 margin-top: 10px;
             }
 
-            input {
-                padding: 0.5rem;
-                width: 80%;
-                margin-top: 10px;
-                border: 1px solid #555;
-                border-radius: 5px;
-                background-color: #222;
-                color: white;
-            }
-
             button:hover {
                 background-color: #45a049;
             }
-        </style>
-        <script src="https://cdn.jsdelivr.net/npm/nostr-zap@1.1.0"></script>
-    </head>
 
+            #profile-pic {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+            }
+        </style>
+    </head>
     <body>
-        <header>
-            <div class="header-content">
+        <nav>
+            <div class="nav-content">
                 <h1>Pepe.Vote</h1>
-                <div class="profile-pic-container" style="display: none">
-                    <img id="profile-pic" alt="User Profile Picture" />
-                </div>
-                <div class="login-btn-container">
-                    <button id="login-btn">Nostr Login</button>
+                <div class="nav-links">
+                    <a href="#" onclick="showVoting()">Vote</a>
+                    <a href="#" onclick="showLeaderboard()">Leaderboard</a>
+                    <div class="profile-pic-container" style="display: none">
+                        <img id="profile-pic" alt="User Profile Picture" />
+                    </div>
+                    <div class="login-btn-container">
+                        <button id="login-btn">Nostr Login</button>
+                    </div>
                 </div>
             </div>
-        </header>
+        </nav>
+
         <main>
             <div class="vote-section" style="display: none">
                 <h2>Vote on Pepes!</h2>
@@ -107,6 +160,7 @@
                         align-items: center;
                         gap: 20px;
                         flex-wrap: wrap;
+                        margin-top: 2rem;
                     "
                 >
                     <img
@@ -131,20 +185,25 @@
             </div>
 
             <div class="leaderboard-section" style="display: none">
-                <h2>Leaderboard Results!</h2>
-                <div id="leaderboard-results"></div>
-            </div>
-
-            <div class="leaderboard">
-                <button id="leaderboard-btn">View Leaderboard</button>
+                <h2>Leaderboard Results</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Pepe</th>
+                            <th>Votes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-results"></tbody>
+                </table>
             </div>
         </main>
 
         <script>
-            console.log("hello the page has just loaded");
+            // Global variables
             const kindMetadata = 0;
-            const kindOption = 3939; // PEPE Reversi
-            const kindVote = 1212; // Homestar https://www.youtube.com/watch?v=dExUFSLCBYk
+            const kindOption = 3939;
+            const kindVote = 1212;
             const tagFilter = "pepevote";
             const namespace = "vote.pepe";
             const namespaceOption = "voteoptions";
@@ -158,8 +217,8 @@
                 "wss://relay.damus.io",
                 "wss://relay.primal.net",
             ];
-            let tallied = []; // will contain locally tallied amounts for events and images to render in leaderboard
-            let availableOptions = []; // will contain all possible events (with r tag for image url) that can be voted on
+            let tallied = [];
+            let availableOptions = [];
             let option1id = "";
             let option2id = "";
             let brokenImageUrl = "broken";
@@ -170,12 +229,14 @@
                         return getImageFromEvent(o);
                     }
                 }
-                if (window.DEBUG)
+                if (window.DEBUG) {
                     console.log(
                         `Event with id ${id} not present in available options. Unable to get image url`,
                     );
+                }
                 return brokenImageUrl;
             }
+
             function getImageFromEvent(o) {
                 for (let t of o.tags) {
                     if (t.length < 2) continue;
@@ -183,18 +244,17 @@
                 }
                 return "";
             }
+
             async function setupVoteOptions() {
                 console.log("setup vote options");
                 let o1 = document.getElementById("voteoption1-btn");
                 let o2 = document.getElementById("voteoption2-btn");
                 if (!availableOptions || availableOptions.length == 0) {
                     console.log("images not loaded");
-                    // force the images to busted
                     o1.src = brokenImageUrl;
                     o1.style.cursor = "not-allowed";
                     o2.src = brokenImageUrl;
                     o2.style.cursor = "not-allowed";
-                    // disable voting
                     option1id = "";
                     option2id = "";
                     return;
@@ -212,73 +272,12 @@
                 const image = getImageFromEvent(opt1);
                 console.log(image);
                 o1.src = image;
-                o1.style.cursor = "hand";
+                o1.style.cursor = "pointer";
                 option2id = opt2.id;
                 o2.src = getImageFromEvent(opt2);
-                o2.style.cursor = "hand";
+                o2.style.cursor = "pointer";
             }
 
-            document
-                .getElementById("login-btn")
-                .addEventListener("click", async () => {
-                    if (window.nostr) {
-                        console.log("window.nostr found");
-                        try {
-                            const pubKey = await window.nostr.getPublicKey();
-                            const profile = await fetchProfile(pubKey);
-                            if (profile.picture) {
-                                document.getElementById("profile-pic").src =
-                                    profile.picture;
-                                document.querySelector(
-                                    ".profile-pic-container",
-                                ).style.display = "block";
-                            }
-                            document.querySelector(
-                                ".vote-section",
-                            ).style.display = "block";
-                            document.querySelector(
-                                ".login-btn-container",
-                            ).style.display = "none";
-                            setupVoteOptions();
-                        } catch (error) {
-                            console.error("Login failed:", error);
-                            alert(
-                                "Failed to login with NIP-07. Please check your extension.",
-                            );
-                        }
-                    } else {
-                        alert(
-                            "NIP-07 extension is required to log in and vote.",
-                        );
-                        console.log("window.nostr NOT found");
-                    }
-                });
-
-            document
-                .getElementById("leaderboard-btn")
-                .addEventListener("click", async () => {
-                    document.querySelector(".vote-section").style.display =
-                        "none";
-                    let lbr = document.getElementById("leaderboard-results");
-                    // Clear existing entries on leaderboard
-                    while (lbr.firstChild) lbr.removeChild(lbr.lastChild);
-                    console.log(tallied);
-                    // Add new ones from
-                    for (let tally of tallied) {
-                        // tally.eventId, tally.votecount
-                        // look up url from options
-                        let imageUrl = getImageFromEventByID(tally.eventId);
-
-                        // TODO: Create element for this image and vote count. Then append the child to lbr.
-                    }
-
-                    // Show leaderboard
-                    document.getElementById(
-                        "leaderboard-results",
-                    ).style.display = "block";
-                });
-
-            // Function to fetch profile info from relays
             async function fetchProfile(pubKey) {
                 return new Promise((resolve, reject) => {
                     let profile = null;
@@ -320,7 +319,6 @@
                 });
             }
 
-            // Function to fetch voting options
             async function fetchOptions() {
                 return new Promise((resolve, reject) => {
                     console.log("fetching options promise....");
@@ -334,12 +332,9 @@
                         };
                         ws.onmessage = (event) => {
                             const message = JSON.parse(event.data);
-                            console.log(message);
                             if (message[0] === "EVENT" && message.length >= 2) {
-                                //console.log(message);
                                 let voteoption = message[2];
                                 if (!optionids.includes(voteoption.id)) {
-                                    // Validate its the set we want by checking tag and labels
                                     let hasNamespace = false;
                                     let hasLabel = false;
                                     let hasHashtag = false;
@@ -383,13 +378,11 @@
                         };
                     });
                     setTimeout(() => {
-                        console.log(options);
                         resolve(options);
                     }, 2000);
                 });
             }
 
-            // Function to fetch responses from relays
             async function fetchResults() {
                 return new Promise((resolve, reject) => {
                     let results = [];
@@ -409,8 +402,6 @@
                             const message = JSON.parse(event.data);
                             if (message[0] === "EVENT" && message.length >= 2) {
                                 let result = message[2];
-                                console.log(result);
-                                console.log(resultids);
                                 if (!resultids.includes(result.id)) {
                                     let hasNamespace = false;
                                     let hasLabel = false;
@@ -432,7 +423,6 @@
                                         hasLabel &&
                                         hasHashtag
                                     ) {
-                                        console.log(result);
                                         results.push(result);
                                         resultids.push(result.id);
                                     }
@@ -462,10 +452,7 @@
             }
 
             async function fetchTallySort() {
-                // fetch
                 let currentResults = await fetchResults();
-                console.log(currentResults);
-                // tally
                 let talliedEvents = [];
                 for (let result of currentResults) {
                     for (let tag of result.tags) {
@@ -488,37 +475,10 @@
                         }
                     }
                 }
-                // sort
-                talliedEvents.sort((a, b) =>
-                    a.votecount > b.votecount
-                        ? 1
-                        : b.votecount > a.votecount
-                          ? -1
-                          : 0,
-                );
+                talliedEvents.sort((a, b) => b.votecount - a.votecount);
                 tallied = talliedEvents;
             }
 
-            // Initial data retrieval
-            setTimeout(() => {
-                let r = (async () => {
-                    fetchTallySort();
-                    if (window.DEBUG) console.log(tallied);
-                })();
-            }, 1700);
-            (async () => {
-                availableOptions = await fetchOptions();
-                console.log(availableOptions);
-            })();
-            // Periodically fetch results and tally
-            let intervalResults = setInterval(() => {
-                let r = (async () => {
-                    fetchTallySort();
-                    if (window.DEBUG) console.log(tallied);
-                })();
-            }, 60000);
-
-            // Casting a vote
             async function voteNote(choice1, choice2) {
                 if (!option1id || !option2id) {
                     if (window.DEBUG)
@@ -569,22 +529,144 @@
                     ws.onclose = () => {
                         if (window.DEBUG)
                             console.log(`Connection to ${relay} closed`);
-                        return eentId;
                     };
                 });
+                return eventId;
             }
-            document
-                .getElementById("voteoption1-btn")
-                .addEventListener("click", async () => {
-                    let v = await voteNote(option1id, option2id);
-                    // show next choices
+
+            function showVoting() {
+                document.querySelector(".vote-section").style.display = "block";
+                document.querySelector(".leaderboard-section").style.display =
+                    "none";
+            }
+
+            function showLeaderboard() {
+                document.querySelector(".vote-section").style.display = "none";
+                document.querySelector(".leaderboard-section").style.display =
+                    "block";
+                updateLeaderboard();
+            }
+
+            function updateLeaderboard() {
+                const leaderboardResults = document.getElementById(
+                    "leaderboard-results",
+                );
+                while (leaderboardResults.firstChild) {
+                    leaderboardResults.removeChild(
+                        leaderboardResults.lastChild,
+                    );
+                }
+
+                tallied.forEach((tally, index) => {
+                    const imageUrl = getImageFromEventByID(tally.eventId);
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                                                <td>${index + 1}</td>
+                                                <td><img src="${imageUrl}" alt="Pepe ${index + 1}"></td>
+                                                <td>${tally.votecount}</td>
+                                            `;
+                    leaderboardResults.appendChild(row);
                 });
-            document
-                .getElementById("voteoption2-btn")
-                .addEventListener("click", async () => {
-                    let v = await voteNote(option2id, option1id);
-                    // show next choices
-                });
+            }
+
+            // Wait for DOM to be fully loaded before running any scripts
+            document.addEventListener("DOMContentLoaded", function () {
+                console.log("hello the page has just loaded");
+
+                // Initialize buttons and event listeners
+                const loginBtn = document.getElementById("login-btn");
+                const voteOption1Btn =
+                    document.getElementById("voteoption1-btn");
+                const voteOption2Btn =
+                    document.getElementById("voteoption2-btn");
+
+                if (loginBtn) {
+                    loginBtn.addEventListener("click", async () => {
+                        if (window.nostr) {
+                            console.log("window.nostr found");
+                            try {
+                                const pubKey =
+                                    await window.nostr.getPublicKey();
+                                const profile = await fetchProfile(pubKey);
+                                if (profile.picture) {
+                                    document.getElementById("profile-pic").src =
+                                        profile.picture;
+                                    document.querySelector(
+                                        ".profile-pic-container",
+                                    ).style.display = "block";
+                                }
+                                document.querySelector(
+                                    ".vote-section",
+                                ).style.display = "block";
+                                document.querySelector(
+                                    ".login-btn-container",
+                                ).style.display = "none";
+                                setupVoteOptions();
+                            } catch (error) {
+                                console.error("Login failed:", error);
+                                alert(
+                                    "Failed to login with NIP-07. Please check your extension.",
+                                );
+                            }
+                        } else {
+                            alert(
+                                "NIP-07 extension is required to log in and vote.",
+                            );
+                            console.log("window.nostr NOT found");
+                        }
+                    });
+                }
+
+                if (voteOption1Btn) {
+                    voteOption1Btn.addEventListener("click", async () => {
+                        await voteNote(option1id, option2id);
+                        setupVoteOptions(); // Show new voting options after vote
+                    });
+                }
+
+                if (voteOption2Btn) {
+                    voteOption2Btn.addEventListener("click", async () => {
+                        await voteNote(option2id, option1id);
+                        setupVoteOptions(); // Show new voting options after vote
+                    });
+                }
+
+                // Add click handlers for navigation
+                document
+                    .querySelector('a[onclick="showVoting()"]')
+                    .addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showVoting();
+                    });
+
+                document
+                    .querySelector('a[onclick="showLeaderboard()"]')
+                    .addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showLeaderboard();
+                    });
+
+                // Initial data retrieval
+                setTimeout(() => {
+                    (async () => {
+                        await fetchTallySort();
+                        if (window.DEBUG) console.log(tallied);
+                    })();
+                }, 1700);
+
+                (async () => {
+                    availableOptions = await fetchOptions();
+                    console.log(availableOptions);
+                })();
+
+                // Set up periodic fetch
+                setInterval(() => {
+                    (async () => {
+                        await fetchTallySort();
+                        if (window.DEBUG) console.log(tallied);
+                    })();
+                }, 60000);
+            });
         </script>
     </body>
 </html>
