@@ -138,6 +138,10 @@
             <div class="leaderboard">
                 <button id="leaderboard-btn">View Leaderboard</button>
             </div>
+
+            <div class="votebutton" style="display:none">
+                <button id="vote-btn">Begin Voting</button>
+            </div>
         </main>
 
         <script>
@@ -203,7 +207,8 @@
                 const opt1Idx = Math.floor(
                     Math.random() * availableOptions.length,
                 );
-                const opt2Idx = Math.floor(
+                let opt2Idx = opt1Idx;
+                while (opt2Idx == opt1Idx) opt2Idx = Math.floor(
                     Math.random() * availableOptions.length,
                 );
                 const opt1 = availableOptions[opt1Idx];
@@ -254,6 +259,10 @@
                     }
                 });
 
+            document.getElementById("vote-btn").addEventListener("click", async () => {
+                setupVoteOptions();
+            });
+
             document
                 .getElementById("leaderboard-btn")
                 .addEventListener("click", async () => {
@@ -276,6 +285,14 @@
                     document.getElementById(
                         "leaderboard-results",
                     ).style.display = "block";
+
+                    // Show button for voting if they are logged in
+                    if (window.nostr) {
+                        document.querySelector(
+                                    ".votebutton",
+                        ).style.display = "block";
+                    }
+
                 });
 
             // Function to fetch profile info from relays
@@ -508,7 +525,7 @@
             }, 1700);
             (async () => {
                 availableOptions = await fetchOptions();
-                console.log(availableOptions);
+                if (window.DEBUG) console.log(availableOptions);
             })();
             // Periodically fetch results and tally
             let intervalResults = setInterval(() => {
@@ -572,18 +589,18 @@
                         return eentId;
                     };
                 });
+                // more choices!
+                setupVoteOptions();
             }
             document
                 .getElementById("voteoption1-btn")
                 .addEventListener("click", async () => {
                     let v = await voteNote(option1id, option2id);
-                    // show next choices
                 });
             document
                 .getElementById("voteoption2-btn")
                 .addEventListener("click", async () => {
                     let v = await voteNote(option2id, option1id);
-                    // show next choices
                 });
         </script>
     </body>
